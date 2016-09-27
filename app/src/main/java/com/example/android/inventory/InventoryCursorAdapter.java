@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
 
+import com.example.android.inventory.data.InventoryContract.InventoryEntry;
+
 public class InventoryCursorAdapter extends CursorAdapter {
 
     public InventoryCursorAdapter(Context context, Cursor c) {
@@ -23,5 +25,13 @@ public class InventoryCursorAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
+
+        TextView nameTextView = (TextView) view.findViewById(R.id.name);
+
+        int nameColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_NAME);
+        String inventoryName = cursor.getString(nameColumnIndex);
+
+        nameTextView.setText(inventoryName);
+
     }
 }
