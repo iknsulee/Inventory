@@ -49,13 +49,13 @@ public class InventoryProvider extends ContentProvider {
         sUriMatcher.addURI(InventoryContract.CONTENT_AUTHORITY, InventoryContract.PATH_INVENTORIES + "/#", INVENTORY_ID);
     }
 
-    private InventoryDbHelper inventoryDbHelper;
+    private InventoryDbHelper mDbHelper;
 
     @Override
     public boolean onCreate() {
         Log.d(LOG_TAG, "onCreate");
 
-        inventoryDbHelper = new InventoryDbHelper(getContext());
+        mDbHelper = new InventoryDbHelper(getContext());
 
         return true;
     }
@@ -66,15 +66,16 @@ public class InventoryProvider extends ContentProvider {
         Log.d(LOG_TAG, "query");
 
         // Get readable database
-        SQLiteDatabase database = inventoryDbHelper.getReadableDatabase();
+        SQLiteDatabase database = mDbHelper.getReadableDatabase();
 
         // This cursor will hold the result of the query.
         Cursor cursor = null;
 
+        // Figure out if the URI matcher can match the URI to a specific code
         int match = sUriMatcher.match(uri);
-
         switch (match) {
             case INVENTORY:
+                // For the inventories code, query the inventory table
                 cursor = database.query(InventoryEntry.TABLE_NAME, projection, selection,
                         selectionArgs, null, null, sortOrder);
                 break;
@@ -83,6 +84,8 @@ public class InventoryProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
+
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
 
         return cursor;
     }
@@ -121,12 +124,15 @@ public class InventoryProvider extends ContentProvider {
 
     private Uri insertInventory(Uri uri, ContentValues values) {
 
-        SQLiteDatabase database = inventoryDbHelper.getWritableDatabase();
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
         long id = database.insert(InventoryEntry.TABLE_NAME, null, values);
         if (id == -1) {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
         }
+
+        // Notify all listeners that the data has changed for the pet content URI
+        getContext().getContentResolver().notifyChange(uri, null);
 
         return ContentUris.withAppendedId(uri, id);
     }
@@ -135,7 +141,37 @@ public class InventoryProvider extends ContentProvider {
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         Log.d(LOG_TAG, "delete");
 
-        return 0;
+        // Get writable database
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
+        // Track the number of rows that were deleted
+        int rowsDeleted;
+
+        int match = sUriMatcher.match(uri);
+        switch (match) {
+            case INVENTORY:
+                // Delete all rows that match the selection and selection args
+                rowsDeleted = database.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            case INVENTORY_ID:
+                // Delete a single row given by the ID in the URI
+                selection = InventoryEntry._ID + "=?";
+                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+                rowsDeleted = database.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+            default:
+                throw new IllegalArgumentException("Deletion is not supported for " + uri);
+        }
+
+        // If 1 or more rows were deleted, then notify all listeners that the data at the
+        // given URI has changed
+        if (rowsDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+
+        }
+
+        // Return the number of rows deleted
+        return rowsDeleted;
     }
 
     @Override

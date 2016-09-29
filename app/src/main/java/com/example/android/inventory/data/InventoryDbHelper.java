@@ -11,7 +11,7 @@ public class InventoryDbHelper extends SQLiteOpenHelper {
     public static final String LOG_TAG = InventoryDbHelper.class.getSimpleName();
 
     private static final String DATABASE_NAME = "store.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public InventoryDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -25,7 +25,10 @@ public class InventoryDbHelper extends SQLiteOpenHelper {
         // Create a String that contains the SQL statement to create the inventory table.
         String SQL_CREATE_INVENTORY_TABLE = "CREATE TABLE " + InventoryEntry.TABLE_NAME + " ("
                 + InventoryEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + InventoryEntry.COLUMN_INVENTORY_NAME + " TEXT NOT NULL"
+                + InventoryEntry.COLUMN_INVENTORY_NAME + " TEXT NOT NULL,"
+                + InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY + " INTEGER NOT NULL,"
+                + InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY + " INTEGER NOT NULL,"
+                + InventoryEntry.COLUMN_INVENTORY_PRICE + " TEXT NOT NULL"
                 + ")";
         db.execSQL(SQL_CREATE_INVENTORY_TABLE);
     }

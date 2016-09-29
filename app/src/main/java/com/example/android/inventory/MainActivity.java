@@ -97,14 +97,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // Create a ContentValues object where column names are the keys,
         ContentValues values = new ContentValues();
         values.put(InventoryEntry.COLUMN_INVENTORY_NAME, "name");
+        values.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, 6);
+        values.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, 4);
+        values.put(InventoryEntry.COLUMN_INVENTORY_PRICE, "$100");
 
+        Log.d(LOG_TAG, "insert URI: " + InventoryEntry.CONTENT_URI);
         Uri newUri = getContentResolver().insert(InventoryEntry.CONTENT_URI, values);
         Log.d(LOG_TAG, "newUri: " + newUri);
 
     }
 
     private void deleteAllInventories() {
-
+        int rowsDeleted = getContentResolver().delete(InventoryEntry.CONTENT_URI, null, null);
+        Log.d(LOG_TAG, rowsDeleted + " rows deleted from inventory database");
     }
 
     @Override
@@ -114,7 +119,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // Define a projection that specifies the columns from the table we care about.
         String[] projection = {
                 InventoryEntry._ID,
-                InventoryEntry.COLUMN_INVENTORY_NAME
+                InventoryEntry.COLUMN_INVENTORY_NAME,
+                InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_PRICE
         };
 
         return new CursorLoader(
