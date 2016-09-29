@@ -2,6 +2,7 @@ package com.example.android.inventory;
 
 import android.app.AlertDialog;
 import android.app.LoaderManager;
+import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,7 +12,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -181,6 +185,96 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            // Respond to a click on the "Save" menu option
+            case R.id.action_save:
+                // Save inventory to database
+                saveInventory();
+                // Exit activity
+                finish();
+                return true;
+            // Respond to a click on the "Up" arrow button in the app bar
+            case android.R.id.home:
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * Get user input from editor and save inventory into database
+     */
+    private void saveInventory() {
+
+        // Read from input fields
+        // Use trim to eliminate leading or trailing white space
+        String nameString = mNameEditText.getText().toString().trim();
+        String currentQuantityString = mCurrentQuantityEditText.getText().toString().trim();
+
+        // Create a ContentValues object where column names are the key,
+        // and inventory attributes from the editor are the values
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, nameString);
+
+        int currentQuantity = 0;
+        if (!TextUtils.isEmpty(currentQuantityString)) {
+            currentQuantity = Integer.parseInt(currentQuantityString);
+        }
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, currentQuantity);
+
+        // TODO: 2016-09-29 임시로 작성
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, 5);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, "$100");
+
+        // Determine if this is a new or existing inventory by checking if mCurrentInventoryUri
+        // is null or not
+        if (mCurrentInventoryUri == null) {
+            // This is a NEW inventory, so insert a new inventory into the provider
+            // returning the content URI for the new inventory.
+            Uri newUri = getContentResolver().insert(InventoryEntry.CONTENT_URI, contentValues);
+
+            // Show a toast message depending on whether or not the insertion was successful.
+            if (newUri == null) {
+                // If the new content URI is null, then there was an error with insertion.
+                Toast.makeText(this, getString(R.string.editor_insert_inventory_failed),
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                // Otherwise, the insertion was successful and we can display a toast.
+                Toast.makeText(this, getString(R.string.editor_insert_inventory_successful),
+                        Toast.LENGTH_SHORT).show();
+            }
+
+        } else {
+            // Otherwise this is an existing inventory, so update the inventory with content URI:
+            // mCurrentInventoryUri and pass in the new ContentValues. Pass in null for the selection
+            // and selection args because mCurrentInventoryUri will already identity the correct
+            // row in the database that we want to modify.
+            int rowsAffected = getContentResolver().update(mCurrentInventoryUri, contentValues, null, null);
+
+            // Show a toast message depending on whether or not the update was successful.
+            if (rowsAffected == 0) {
+                // If no rows were affected, then there was an error with the update.
+                Toast.makeText(this, getString(R.string.editor_update_pet_failed),
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                // Otherwise, the update was successful and we can display a toast.
+                Toast.makeText(this, getString(R.string.editor_update_pet_successful),
+                        Toast.LENGTH_SHORT).show();
+            }
+
+        }
 
     }
 }

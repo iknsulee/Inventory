@@ -6,5 +6,10 @@
     <string name="editor_delete_inventory_failed">Error with deleting inventory</string>
     <string name="editor_delete_inventory_successful">Inventory deleted</string>
     <string name="hint_inventory_name">Name</string>
-    <string name="hint_inventory_current_quantity">Currnet Quantity</string>
+    <string name="hint_inventory_current_quantity">Current Quantity</string>
+    <string name="action_save">Save</string>
+    <string name="editor_insert_inventory_failed">Error with saving inventory</string>
+    <string name="editor_insert_inventory_successful">Inventory saved</string>
+    <string name="editor_update_pet_failed">Error with updating inventory</string>
+    <string name="editor_update_pet_successful">Inventory updated</string>
 </resources>
