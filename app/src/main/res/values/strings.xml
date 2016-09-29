@@ -5,4 +5,6 @@
     <string name="cancel">Cancel</string>
     <string name="editor_delete_inventory_failed">Error with deleting inventory</string>
     <string name="editor_delete_inventory_successful">Inventory deleted</string>
+    <string name="hint_inventory_name">Name</string>
+    <string name="hint_inventory_current_quantity">Currnet Quantity</string>
 </resources>
