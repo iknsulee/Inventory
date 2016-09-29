@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void insertInventory() {
         // Create a ContentValues object where column names are the keys,
         ContentValues values = new ContentValues();
-        values.put(InventoryEntry.COLUMN_INVENTORY_NAME, "name");
+        values.put(InventoryEntry.COLUMN_INVENTORY_PRODUCT, "name");
         values.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, 6);
         values.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, 4);
         values.put(InventoryEntry.COLUMN_INVENTORY_PRICE, "$100");
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // Define a projection that specifies the columns from the table we care about.
         String[] projection = {
                 InventoryEntry._ID,
-                InventoryEntry.COLUMN_INVENTORY_NAME,
+                InventoryEntry.COLUMN_INVENTORY_PRODUCT,
                 InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PRICE

@@ -38,7 +38,7 @@ public class InventoryCursorAdapter extends CursorAdapter {
 
         // Find the columns of inventory attributes that we're interested in.
         int idColumnIndex = cursor.getColumnIndex(InventoryEntry._ID);
-        int nameColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_NAME);
+        int nameColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRODUCT);
         int currentQuantityColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
         int saleQuantityColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
         int priceColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);

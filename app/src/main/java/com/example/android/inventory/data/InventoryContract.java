@@ -29,7 +29,7 @@ public class InventoryContract {
         public static final String TABLE_NAME = "inventory";
 
         public static final String _ID = BaseColumns._ID;
-        public static final String COLUMN_INVENTORY_NAME = "name";
+        public static final String COLUMN_INVENTORY_PRODUCT = "product";
         public static final String COLUMN_INVENTORY_CURRENT_QUANTITY = "current_quantity";
         public static final String COLUMN_INVENTORY_SALE_QUANTITY = "sale_quantity";
         public static final String COLUMN_INVENTORY_PRICE = "price";

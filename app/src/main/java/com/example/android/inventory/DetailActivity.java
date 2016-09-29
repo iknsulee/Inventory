@@ -31,6 +31,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private Uri mCurrentInventoryUri;
     private EditText mNameEditText;
     private EditText mCurrentQuantityEditText;
+    private EditText mSaleQuantityEditText;
+    private EditText mPriceEditText;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -44,11 +46,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         Log.d(LOG_TAG, "mCurrentInventoryUri:" + mCurrentInventoryUri);
 
         if (mCurrentInventoryUri == null) {
-            setTitle("Add a Inventory");
+            setTitle(getString(R.string.detail_activity_title_new_product));
 
             // TODO: 2016-09-29 hide button
         } else {
-            setTitle("Edit Inventory");
+            setTitle(getString(R.string.detail_activity_title_edit_product));
 
             // Initialize a loader to read the inventory data from the database
             // and display the current values in the editor
@@ -57,6 +59,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         mNameEditText = (EditText) findViewById(R.id.edit_inventory_name);
         mCurrentQuantityEditText = (EditText) findViewById(R.id.edit_inventory_current_quantity);
+        mSaleQuantityEditText = (EditText) findViewById(R.id.edit_inventory_sale_quantity);
+        mPriceEditText = (EditText) findViewById(R.id.edit_inventory_price);
 
     }
 
@@ -144,7 +148,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         String[] projection = {
                 InventoryEntry._ID,
-                InventoryEntry.COLUMN_INVENTORY_NAME,
+                InventoryEntry.COLUMN_INVENTORY_PRODUCT,
                 InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PRICE
@@ -170,16 +174,22 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // (This should be the only row in the cursor)
         if (data.moveToFirst()) {
             // Find the column of inventory attributes that we're interested in
-            int nameColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_NAME);
+            int nameColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRODUCT);
             int currentQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
+            int saleQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
+            int priceColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
 
             // Extract out the value from the Cursor for the given column index
             String name = data.getString(nameColumnIndex);
             int currentQuantity = data.getInt(currentQuantityColumnIndex);
+            int saleQuantity = data.getInt(saleQuantityColumnIndex);
+            String price = data.getString(priceColumnIndex);
 
             // Update the views on the screen with the values from the database
             mNameEditText.setText(name);
             mCurrentQuantityEditText.setText(Integer.toString(currentQuantity));
+            mSaleQuantityEditText.setText(Integer.toString(saleQuantity));
+            mPriceEditText.setText(price);
         }
 
     }
@@ -228,7 +238,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Create a ContentValues object where column names are the key,
         // and inventory attributes from the editor are the values
         ContentValues contentValues = new ContentValues();
-        contentValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, nameString);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRODUCT, nameString);
 
         int currentQuantity = 0;
         if (!TextUtils.isEmpty(currentQuantityString)) {

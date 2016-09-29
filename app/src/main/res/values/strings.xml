@@ -12,4 +12,8 @@
     <string name="editor_insert_inventory_successful">Inventory saved</string>
     <string name="editor_update_pet_failed">Error with updating inventory</string>
     <string name="editor_update_pet_successful">Inventory updated</string>
+    <string name="detail_activity_title_new_product">Add a Product</string>
+    <string name="detail_activity_title_edit_product">Edit Product</string>
+    <string name="hint_inventory_sale_quantity">Sale</string>
+    <string name="hint_inventory_price">Price</string>
 </resources>
