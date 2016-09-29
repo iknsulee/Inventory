@@ -42,7 +42,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             setTitle("Add a Inventory");
 
             // TODO: 2016-09-29 hide button
-
         } else {
             setTitle("Edit Inventory");
 
