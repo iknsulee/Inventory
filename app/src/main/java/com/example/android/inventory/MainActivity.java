@@ -1,6 +1,7 @@
 package com.example.android.inventory;
 
 import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -16,7 +17,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
@@ -64,6 +64,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 //                Log.d(LOG_TAG, "name: " + inventories.get(position).getName() +
 //                        ", position: " + position + ", id: " + id);
                 Log.d(LOG_TAG, "position: " + position + ", id: " + id);
+
+                // Create new intent to go to {@link DetailActivity}
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+
+                Uri currentInventoryUri = ContentUris.withAppendedId(InventoryEntry.CONTENT_URI, id);
+
+                intent.setData(currentInventoryUri);
+
+                // Launch the DetailActivity to display the data for the current inventory
+                startActivity(intent);
+
             }
         });
 
