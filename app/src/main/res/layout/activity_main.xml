@@ -22,7 +22,7 @@
             android:layout_centerHorizontal="true"
             android:fontFamily="sans-serif-medium"
             android:paddingTop="16dp"
-            android:text="empty"
+            android:text="Inventory is empty"
             android:textAppearance="?android:textAppearanceMedium" />
 
     </RelativeLayout>

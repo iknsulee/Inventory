@@ -95,9 +95,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.action_insert_dummy_data:
-                insertInventory();
-                break;
             case R.id.action_delete_all_entries:
                 deleteAllInventories();
                 break;
@@ -162,20 +159,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             int rowsAffected = getContentResolver().update(currentInventoryUri, contentValues, null, null);
         }
 
-
-    }
-
-    private void insertInventory() {
-        // Create a ContentValues object where column names are the keys,
-        ContentValues values = new ContentValues();
-        values.put(InventoryEntry.COLUMN_INVENTORY_PRODUCT, "name");
-        values.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, 6);
-        values.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, 4);
-        values.put(InventoryEntry.COLUMN_INVENTORY_PRICE, "$100");
-
-        Log.d(LOG_TAG, "insert URI: " + InventoryEntry.CONTENT_URI);
-        Uri newUri = getContentResolver().insert(InventoryEntry.CONTENT_URI, values);
-        Log.d(LOG_TAG, "newUri: " + newUri);
 
     }
 

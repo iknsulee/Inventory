@@ -8,8 +8,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +30,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private static final int EXISTING_INVENTORY_LOADER = 0;
+    private static int RESULT_LOAD_IMAGE = 1;
 
     private Uri mCurrentInventoryUri;
     private EditText mNameEditText;
@@ -66,6 +70,38 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Initialize a loader to read the inventory data from the database
             // and display the current values in the editor
             getLoaderManager().initLoader(EXISTING_INVENTORY_LOADER, null, this);
+        }
+    }
+
+    public void onSelectImage(View view) {
+
+        Intent intent = new Intent(
+                Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+        startActivityForResult(intent, RESULT_LOAD_IMAGE);
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+            Uri selectedImage = data.getData();
+            String[] filePathColumn = { MediaStore.Images.Media.DATA };
+
+            Cursor cursor = getContentResolver().query(selectedImage,
+                    filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            String picturePath = cursor.getString(columnIndex);
+            cursor.close();
+
+            ImageView imageView = (ImageView) findViewById(R.id.imageview_picture);
+            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+
         }
     }
 
@@ -184,6 +220,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_PICTURE,
                 InventoryEntry.COLUMN_INVENTORY_PRICE
         };
 

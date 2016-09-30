@@ -77,9 +77,9 @@
             android:paddingLeft="4dp">
 
             <TextView
-                android:layout_gravity="center_vertical"
                 android:id="@+id/edit_inventory_current_quantity"
-                style="@style/ViewFieldStyle" />
+                style="@style/ViewFieldStyle"
+                android:layout_gravity="center_vertical" />
 
         </LinearLayout>
 
@@ -137,6 +137,34 @@
                 android:inputType="textCapWords" />
         </LinearLayout>
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:orientation="horizontal">
+
+        <!-- Label -->
+        <TextView
+            style="@style/CategoryStyle"
+            android:text="Picture" />
+
+        <!-- Input fields -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:paddingLeft="4dp">
+
+            <ImageView
+                android:onClick="onSelectImage"
+                android:src="@drawable/ic_empty_shelter"
+                android:id="@+id/imageview_picture"
+                style="@style/ViewFieldStyle" />
+
+        </LinearLayout>
+    </LinearLayout>
+
 
 
     <LinearLayout

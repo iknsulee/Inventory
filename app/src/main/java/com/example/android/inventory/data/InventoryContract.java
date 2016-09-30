@@ -34,6 +34,7 @@ public class InventoryContract {
         public static final String COLUMN_INVENTORY_CURRENT_QUANTITY = "current_quantity";
         public static final String COLUMN_INVENTORY_SALE_QUANTITY = "sale_quantity";
         public static final String COLUMN_INVENTORY_PRICE = "price";
+        public static final String COLUMN_INVENTORY_PICTURE = "picture";
     }
 
 
