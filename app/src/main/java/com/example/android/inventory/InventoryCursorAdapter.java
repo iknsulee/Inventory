@@ -28,7 +28,7 @@ public class InventoryCursorAdapter extends CursorAdapter {
     }
 
     @Override
-    public void bindView(View view, Context context, Cursor cursor) {
+    public void bindView(View view, final Context context, Cursor cursor) {
 
         // Find individual views that we want to modify in the list item layout
         TextView nameTextView = (TextView) view.findViewById(R.id.name);
@@ -54,15 +54,24 @@ public class InventoryCursorAdapter extends CursorAdapter {
         saleQuantityTextView.setText("sale quantity: " + inventorySaleQuantity);
         priceTextView.setText("price: " + inventoryPrice);
 
-        Button saleButton = (Button)view.findViewById(R.id.button_sale);
+        Button saleButton = (Button) view.findViewById(R.id.button_sale);
         saleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (v != null) {
                     Log.d(LOG_TAG, "id: " + inventoryId);
+
+                    reduceQuantity(context, inventoryId);
                 }
             }
         });
 
     }
+
+    private void reduceQuantity(Context context, int id) {
+
+        ((MainActivity) context).reduceQuantity(id);
+
+    }
+
 }

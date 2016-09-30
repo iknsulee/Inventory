@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
@@ -107,6 +108,63 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return super.onOptionsItemSelected(item);
     }
 
+    public void reduceQuantity(int id) {
+        Log.d(LOG_TAG, "reduceQuantity: " + id);
+
+        Uri currentInventoryUri = ContentUris.withAppendedId(InventoryEntry.CONTENT_URI, id);
+
+        String[] projection = {
+                InventoryEntry._ID,
+                InventoryEntry.COLUMN_INVENTORY_PRODUCT,
+                InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_PRICE
+        };
+
+        Log.d(LOG_TAG, "currentInventoryUri: " + currentInventoryUri);
+
+        Cursor data = getContentResolver().query(currentInventoryUri, projection, null, null, null);
+        if (data.moveToFirst()) {
+            // Find the column of inventory attributes that we're interested in
+            int nameColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRODUCT);
+            int totalQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY);
+            int currentQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
+            int saleQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
+            int priceColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
+
+            // Extract out the value from the Cursor for the given column index
+            String name = data.getString(nameColumnIndex);
+            int totalQuantity = data.getInt(totalQuantityColumnIndex);
+            int currentQuantity = data.getInt(currentQuantityColumnIndex);
+            int saleQuantity = data.getInt(saleQuantityColumnIndex);
+            String price = data.getString(priceColumnIndex);
+
+            Log.d(LOG_TAG, "name: " + name);
+            Log.d(LOG_TAG, "totalQuantity: " + totalQuantity);
+            Log.d(LOG_TAG, "currentQuantity: " + currentQuantity);
+            Log.d(LOG_TAG, "saleQuantity: " + saleQuantity);
+            Log.d(LOG_TAG, "price: " + price);
+
+            // Create a ContentValues object where column names are the key,
+            // and inventory attributes from the editor are the values
+            ContentValues contentValues = new ContentValues();
+
+            if (currentQuantity == 0) {
+                Toast.makeText(this, "No inventories", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            saleQuantity += 1;
+            contentValues.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, saleQuantity);
+            currentQuantity = totalQuantity - saleQuantity;
+            contentValues.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, currentQuantity);
+            int rowsAffected = getContentResolver().update(currentInventoryUri, contentValues, null, null);
+        }
+
+
+    }
+
     private void insertInventory() {
         // Create a ContentValues object where column names are the keys,
         ContentValues values = new ContentValues();
@@ -134,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         String[] projection = {
                 InventoryEntry._ID,
                 InventoryEntry.COLUMN_INVENTORY_PRODUCT,
+                InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PRICE

@@ -15,10 +15,10 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
@@ -30,7 +30,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     private Uri mCurrentInventoryUri;
     private EditText mNameEditText;
-    private EditText mCurrentQuantityEditText;
+    private EditText mTotalQuantityEditText;
+    private TextView mCurrentQuantityTextView;
     private EditText mSaleQuantityEditText;
     private EditText mPriceEditText;
 
@@ -45,10 +46,20 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mCurrentInventoryUri = intent.getData();
         Log.d(LOG_TAG, "mCurrentInventoryUri:" + mCurrentInventoryUri);
 
+        mNameEditText = (EditText) findViewById(R.id.edit_product_name);
+        mTotalQuantityEditText = (EditText) findViewById(R.id.edit_inventory_total_quantity);
+        mCurrentQuantityTextView = (TextView) findViewById(R.id.edit_inventory_current_quantity);
+        mSaleQuantityEditText = (EditText) findViewById(R.id.edit_inventory_sale_quantity);
+        mPriceEditText = (EditText) findViewById(R.id.edit_inventory_price);
+
         if (mCurrentInventoryUri == null) {
             setTitle(getString(R.string.detail_activity_title_new_product));
 
-            // TODO: 2016-09-29 hide button
+            View orderButton = findViewById(R.id.button_order);
+            orderButton.setVisibility(View.INVISIBLE);
+            View deleteButton = findViewById(R.id.button_delete);
+            deleteButton.setVisibility(View.INVISIBLE);
+
         } else {
             setTitle(getString(R.string.detail_activity_title_edit_product));
 
@@ -56,11 +67,34 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // and display the current values in the editor
             getLoaderManager().initLoader(EXISTING_INVENTORY_LOADER, null, this);
         }
+    }
 
-        mNameEditText = (EditText) findViewById(R.id.edit_inventory_name);
-        mCurrentQuantityEditText = (EditText) findViewById(R.id.edit_inventory_current_quantity);
-        mSaleQuantityEditText = (EditText) findViewById(R.id.edit_inventory_sale_quantity);
-        mPriceEditText = (EditText) findViewById(R.id.edit_inventory_price);
+    public void onSave(View view) {
+
+        if (TextUtils.isEmpty(mNameEditText.getText().toString().trim())) {
+            Toast.makeText(DetailActivity.this, "Product name is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(mTotalQuantityEditText.getText().toString().trim())) {
+            Toast.makeText(DetailActivity.this, "Total Quantity is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(mSaleQuantityEditText.getText().toString().trim())) {
+            Toast.makeText(DetailActivity.this, "Sale Quantity is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(mPriceEditText.getText().toString().trim())) {
+            Toast.makeText(DetailActivity.this, "Price is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Save inventory to database
+        saveInventory();
+        // Exit activity
+        finish();
 
     }
 
@@ -114,7 +148,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         alertDialog.show();
     }
 
-
     /**
      * Perform the deletion of the pet in the database.
      */
@@ -142,13 +175,13 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         finish();
     }
 
-
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
         String[] projection = {
                 InventoryEntry._ID,
                 InventoryEntry.COLUMN_INVENTORY_PRODUCT,
+                InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PRICE
@@ -175,19 +208,22 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         if (data.moveToFirst()) {
             // Find the column of inventory attributes that we're interested in
             int nameColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRODUCT);
+            int totalQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY);
             int currentQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
             int saleQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
             int priceColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
 
             // Extract out the value from the Cursor for the given column index
             String name = data.getString(nameColumnIndex);
+            int totalQuantity = data.getInt(totalQuantityColumnIndex);
             int currentQuantity = data.getInt(currentQuantityColumnIndex);
             int saleQuantity = data.getInt(saleQuantityColumnIndex);
             String price = data.getString(priceColumnIndex);
 
             // Update the views on the screen with the values from the database
             mNameEditText.setText(name);
-            mCurrentQuantityEditText.setText(Integer.toString(currentQuantity));
+            mTotalQuantityEditText.setText(Integer.toString(totalQuantity));
+            mCurrentQuantityTextView.setText(Integer.toString(currentQuantity));
             mSaleQuantityEditText.setText(Integer.toString(saleQuantity));
             mPriceEditText.setText(price);
         }
@@ -199,11 +235,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_detail, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        getMenuInflater().inflate(R.menu.menu_detail, menu);
+//        return true;
+//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -233,22 +269,31 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Read from input fields
         // Use trim to eliminate leading or trailing white space
         String nameString = mNameEditText.getText().toString().trim();
-        String currentQuantityString = mCurrentQuantityEditText.getText().toString().trim();
+        String totalQuantityString = mTotalQuantityEditText.getText().toString().trim();
+        String saleQuantityString = mSaleQuantityEditText.getText().toString().trim();
+        String priceString = mPriceEditText.getText().toString().trim();
 
         // Create a ContentValues object where column names are the key,
         // and inventory attributes from the editor are the values
         ContentValues contentValues = new ContentValues();
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRODUCT, nameString);
 
-        int currentQuantity = 0;
-        if (!TextUtils.isEmpty(currentQuantityString)) {
-            currentQuantity = Integer.parseInt(currentQuantityString);
+        int totalQuantity = 0;
+        if (!TextUtils.isEmpty(totalQuantityString)) {
+            totalQuantity = Integer.parseInt(totalQuantityString);
         }
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY, totalQuantity);
+
+        int saleQuantity = 0;
+        if (!TextUtils.isEmpty(saleQuantityString)) {
+            saleQuantity = Integer.parseInt(saleQuantityString);
+        }
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, saleQuantity);
+
+        int currentQuantity = totalQuantity - saleQuantity;
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, currentQuantity);
 
-        // TODO: 2016-09-29 임시로 작성
-        contentValues.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, 5);
-        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, "$100");
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceString);
 
         // Determine if this is a new or existing inventory by checking if mCurrentInventoryUri
         // is null or not
@@ -278,15 +323,16 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Show a toast message depending on whether or not the update was successful.
             if (rowsAffected == 0) {
                 // If no rows were affected, then there was an error with the update.
-                Toast.makeText(this, getString(R.string.editor_update_pet_failed),
+                Toast.makeText(this, getString(R.string.editor_update_inventory_failed),
                         Toast.LENGTH_SHORT).show();
             } else {
                 // Otherwise, the update was successful and we can display a toast.
-                Toast.makeText(this, getString(R.string.editor_update_pet_successful),
+                Toast.makeText(this, getString(R.string.editor_update_inventory_successful),
                         Toast.LENGTH_SHORT).show();
             }
 
         }
 
     }
+
 }

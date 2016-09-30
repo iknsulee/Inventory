@@ -12,12 +12,10 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
             android:text="Product" />
 
-        <!-- Input fields -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -26,14 +24,11 @@
             android:paddingLeft="4dp">
 
             <EditText
-                android:id="@+id/edit_inventory_name"
+                android:id="@+id/edit_product_name"
                 style="@style/EditorFieldStyle"
                 android:hint="@string/hint_inventory_name"
                 android:inputType="textCapWords" />
-
         </LinearLayout>
-
-
     </LinearLayout>
 
     <LinearLayout
@@ -44,7 +39,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Quantity" />
+            android:text="Total" />
 
         <!-- Input fields -->
         <LinearLayout
@@ -55,13 +50,38 @@
             android:paddingLeft="4dp">
 
             <EditText
-                android:id="@+id/edit_inventory_current_quantity"
+                android:id="@+id/edit_inventory_total_quantity"
                 style="@style/EditorFieldStyle"
-                android:hint="@string/hint_inventory_current_quantity"
+                android:hint="@string/hint_inventory_total_quantity"
                 android:inputType="textCapWords" />
 
         </LinearLayout>
+    </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Label -->
+        <TextView
+            style="@style/CategoryStyle"
+            android:text="Remaining" />
+
+        <!-- Input fields -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:paddingLeft="4dp">
+
+            <TextView
+                android:layout_gravity="center_vertical"
+                android:id="@+id/edit_inventory_current_quantity"
+                style="@style/ViewFieldStyle" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -90,8 +110,6 @@
                 android:inputType="textCapWords" />
 
         </LinearLayout>
-
-
     </LinearLayout>
 
     <LinearLayout
@@ -117,10 +135,7 @@
                 style="@style/EditorFieldStyle"
                 android:hint="@string/hint_inventory_price"
                 android:inputType="textCapWords" />
-
         </LinearLayout>
-
-
     </LinearLayout>
 
 
@@ -132,7 +147,8 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="modify" />
+            android:onClick="onSave"
+            android:text="Save" />
 
         <Button
             android:id="@+id/button_order"
