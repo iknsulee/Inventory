@@ -1,5 +1,6 @@
 package com.example.android.inventory;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
@@ -7,13 +8,17 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -26,10 +31,13 @@ import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
+import java.io.ByteArrayOutputStream;
+
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
     private static final int EXISTING_INVENTORY_LOADER = 0;
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 100;
     private static int RESULT_LOAD_IMAGE = 1;
 
     private Uri mCurrentInventoryUri;
@@ -38,6 +46,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private TextView mCurrentQuantityTextView;
     private EditText mSaleQuantityEditText;
     private EditText mPriceEditText;
+    private ImageView mPictureImageView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,6 +64,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mCurrentQuantityTextView = (TextView) findViewById(R.id.edit_inventory_current_quantity);
         mSaleQuantityEditText = (EditText) findViewById(R.id.edit_inventory_sale_quantity);
         mPriceEditText = (EditText) findViewById(R.id.edit_inventory_price);
+        mPictureImageView = (ImageView) findViewById(R.id.imageview_picture);
 
         if (mCurrentInventoryUri == null) {
             setTitle(getString(R.string.detail_activity_title_new_product));
@@ -75,12 +85,70 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     public void onSelectImage(View view) {
 
-        Intent intent = new Intent(
-                Intent.ACTION_PICK,
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
-        startActivityForResult(intent, RESULT_LOAD_IMAGE);
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
 
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+
+            }
+        } else {
+
+            Intent intent = new Intent(
+                    Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+            startActivityForResult(intent, RESULT_LOAD_IMAGE);
+
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                    Intent intent = new Intent(
+                            Intent.ACTION_PICK,
+                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+                    startActivityForResult(intent, RESULT_LOAD_IMAGE);
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
     }
 
     @Override
@@ -89,7 +157,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-            String[] filePathColumn = { MediaStore.Images.Media.DATA };
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
             Cursor cursor = getContentResolver().query(selectedImage,
                     filePathColumn, null, null, null);
@@ -249,6 +317,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int currentQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
             int saleQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
             int priceColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
+            int pictureColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PICTURE);
 
             // Extract out the value from the Cursor for the given column index
             String name = data.getString(nameColumnIndex);
@@ -256,6 +325,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int currentQuantity = data.getInt(currentQuantityColumnIndex);
             int saleQuantity = data.getInt(saleQuantityColumnIndex);
             String price = data.getString(priceColumnIndex);
+            byte[] picture = data.getBlob(pictureColumnIndex);
 
             // Update the views on the screen with the values from the database
             mNameEditText.setText(name);
@@ -263,6 +333,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             mCurrentQuantityTextView.setText(Integer.toString(currentQuantity));
             mSaleQuantityEditText.setText(Integer.toString(saleQuantity));
             mPriceEditText.setText(price);
+
+            Bitmap pictureBitmap = BitmapFactory.decodeByteArray(picture, 0, picture.length);
+            mPictureImageView.setImageBitmap(pictureBitmap);
         }
 
     }
@@ -331,6 +404,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, currentQuantity);
 
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceString);
+        byte[] byteArray = getBitmapAsByteArray();
+
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PICTURE, byteArray);
 
         // Determine if this is a new or existing inventory by checking if mCurrentInventoryUri
         // is null or not
@@ -370,6 +446,17 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         }
 
+    }
+
+    private byte[] getBitmapAsByteArray() {
+        // get image and convert byte array
+        mPictureImageView.setDrawingCacheEnabled(true);
+        mPictureImageView.buildDrawingCache();
+        Bitmap imageBitMap = mPictureImageView.getDrawingCache();
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        imageBitMap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        return stream.toByteArray();
     }
 
 }
