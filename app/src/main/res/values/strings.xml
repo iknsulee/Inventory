@@ -18,4 +18,5 @@
     <string name="hint_inventory_sale_quantity">Sale</string>
     <string name="hint_inventory_shipment_quantity">Shipment</string>
     <string name="hint_inventory_price">Price</string>
+    <string name="hint_inventory_supplier_email">supplier@android.com</string>
 </resources>

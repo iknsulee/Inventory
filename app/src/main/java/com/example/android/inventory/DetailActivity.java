@@ -46,6 +46,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private TextView mCurrentQuantityTextView;
     private EditText mSaleQuantityEditText;
     private EditText mPriceEditText;
+    private EditText mSupplierEmailEditText;
     private ImageView mPictureImageView;
 
     @Override
@@ -64,6 +65,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mCurrentQuantityTextView = (TextView) findViewById(R.id.edit_inventory_current_quantity);
         mSaleQuantityEditText = (EditText) findViewById(R.id.edit_inventory_sale_quantity);
         mPriceEditText = (EditText) findViewById(R.id.edit_inventory_price);
+        mSupplierEmailEditText = (EditText) findViewById(R.id.edit_inventory_supplier_email);
         mPictureImageView = (ImageView) findViewById(R.id.imageview_picture);
 
         if (mCurrentInventoryUri == null) {
@@ -180,18 +182,38 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             return;
         }
 
-        if (TextUtils.isEmpty(mTotalQuantityEditText.getText().toString().trim())) {
+        String totalQuantity = mTotalQuantityEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(totalQuantity)) {
             Toast.makeText(DetailActivity.this, "Total Quantity is empty", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        if (TextUtils.isEmpty(mSaleQuantityEditText.getText().toString().trim())) {
-            Toast.makeText(DetailActivity.this, "Sale Quantity is empty", Toast.LENGTH_SHORT).show();
+        if (!TextUtils.isDigitsOnly(totalQuantity)) {
+            Toast.makeText(DetailActivity.this, "Total Quantity must be number", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        if (TextUtils.isEmpty(mPriceEditText.getText().toString().trim())) {
+        String saleQuantity = mSaleQuantityEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(saleQuantity)) {
+            Toast.makeText(DetailActivity.this, "Sale Quantity is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!TextUtils.isDigitsOnly(saleQuantity)) {
+            Toast.makeText(DetailActivity.this, "Sale Quantity must be number", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String price = mPriceEditText.getText().toString().trim();
+        if (TextUtils.isEmpty(price)) {
             Toast.makeText(DetailActivity.this, "Price is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!TextUtils.isDigitsOnly(price)) {
+            Toast.makeText(DetailActivity.this, "Price must be number", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (Integer.parseInt(saleQuantity) > Integer.parseInt(totalQuantity)) {
+            Toast.makeText(DetailActivity.this, "Sale quantity must be equal or less than total quantity", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -203,15 +225,15 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     public void onOrder(View view) {
-        composeEmail(new String[]{"a@b.c.kr"}, "order");
-    }
 
-    public void composeEmail(String[] addresses, String subject) {
+        String supplierEmail = mSupplierEmailEditText.getText().toString();
+        String productName = mNameEditText.getText().toString();
+
         Intent intent = new Intent(Intent.ACTION_SENDTO);
         intent.setData(Uri.parse("mailto:")); // only email apps should handle this
-        intent.putExtra(Intent.EXTRA_EMAIL, addresses);
-        intent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        intent.putExtra(Intent.EXTRA_TEXT, "this is text");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{supplierEmail});
+        intent.putExtra(Intent.EXTRA_SUBJECT, "order " + productName);
+        intent.putExtra(Intent.EXTRA_TEXT, "");
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
@@ -289,6 +311,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PICTURE,
+                InventoryEntry.COLUMN_INVENTORY_SUPPLIER_EMAIL,
                 InventoryEntry.COLUMN_INVENTORY_PRICE
         };
 
@@ -317,6 +340,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int currentQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
             int saleQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
             int priceColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
+            int supplierEmailColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SUPPLIER_EMAIL);
             int pictureColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PICTURE);
 
             // Extract out the value from the Cursor for the given column index
@@ -325,6 +349,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int currentQuantity = data.getInt(currentQuantityColumnIndex);
             int saleQuantity = data.getInt(saleQuantityColumnIndex);
             String price = data.getString(priceColumnIndex);
+            String supplierEmail = data.getString(supplierEmailColumnIndex);
             byte[] picture = data.getBlob(pictureColumnIndex);
 
             // Update the views on the screen with the values from the database
@@ -333,6 +358,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             mCurrentQuantityTextView.setText(Integer.toString(currentQuantity));
             mSaleQuantityEditText.setText(Integer.toString(saleQuantity));
             mPriceEditText.setText(price);
+            mSupplierEmailEditText.setText(supplierEmail);
 
             Bitmap pictureBitmap = BitmapFactory.decodeByteArray(picture, 0, picture.length);
             mPictureImageView.setImageBitmap(pictureBitmap);
@@ -344,12 +370,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     public void onLoaderReset(Loader<Cursor> loader) {
 
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        getMenuInflater().inflate(R.menu.menu_detail, menu);
-//        return true;
-//    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -382,6 +402,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String totalQuantityString = mTotalQuantityEditText.getText().toString().trim();
         String saleQuantityString = mSaleQuantityEditText.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString().trim();
+        String supplierEmailString = mSupplierEmailEditText.getText().toString().trim();
 
         // Create a ContentValues object where column names are the key,
         // and inventory attributes from the editor are the values
@@ -404,8 +425,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, currentQuantity);
 
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceString);
-        byte[] byteArray = getBitmapAsByteArray();
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_SUPPLIER_EMAIL, supplierEmailString);
 
+        byte[] byteArray = getBitmapAsByteArray();
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_PICTURE, byteArray);
 
         // Determine if this is a new or existing inventory by checking if mCurrentInventoryUri
