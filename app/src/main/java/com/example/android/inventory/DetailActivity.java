@@ -33,20 +33,44 @@ import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
 import java.io.ByteArrayOutputStream;
 
+/**
+ * Allows user to create a new inventory or edit an existing one.
+ */
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
+
+    // Identifier for the inventory data loader
     private static final int EXISTING_INVENTORY_LOADER = 0;
+
+    // Identifier for the permission to the picture
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 100;
+
+    // Identifier for the result of loading image
     private static int RESULT_LOAD_IMAGE = 1;
 
+    // Content URI for the existing inventory (null if it's a new inventory)
     private Uri mCurrentInventoryUri;
+
+    // EditText field to enter the inventory's name
     private EditText mNameEditText;
+
+    // EditText field to enter the inventory's total quantity
     private EditText mTotalQuantityEditText;
+
+    // TextView field to enter the inventory's current quantity
     private TextView mCurrentQuantityTextView;
+
+    // EditText field to enter the inventory's sale quantity
     private EditText mSaleQuantityEditText;
+
+    // EditText field to enter the inventory's price
     private EditText mPriceEditText;
+
+    // EditText field to enter the inventory's supplier email address
     private EditText mSupplierEmailEditText;
+
+    // ImageView field to enter the inventory's Picture
     private ImageView mPictureImageView;
 
     @Override
@@ -60,6 +84,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mCurrentInventoryUri = intent.getData();
         Log.d(LOG_TAG, "mCurrentInventoryUri:" + mCurrentInventoryUri);
 
+        // Find all relevant views that we will need to read user input from
         mNameEditText = (EditText) findViewById(R.id.edit_product_name);
         mTotalQuantityEditText = (EditText) findViewById(R.id.edit_inventory_total_quantity);
         mCurrentQuantityTextView = (TextView) findViewById(R.id.edit_inventory_current_quantity);
@@ -68,15 +93,22 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mSupplierEmailEditText = (EditText) findViewById(R.id.edit_inventory_supplier_email);
         mPictureImageView = (ImageView) findViewById(R.id.imageview_picture);
 
+        // If the intent DOES NOT contain a inventory content URI, then we know that we are
+        // creating a new inventory
         if (mCurrentInventoryUri == null) {
+            // This is a new inventory, so change the app bar to say "Add a Product"
             setTitle(getString(R.string.detail_activity_title_new_product));
 
+            // Hide the unnecessary button.
+            // It doesn't make sense to delete an inventory or order by email that hasn't been
+            // created yet.
             View orderButton = findViewById(R.id.button_order);
             orderButton.setVisibility(View.INVISIBLE);
             View deleteButton = findViewById(R.id.button_delete);
             deleteButton.setVisibility(View.INVISIBLE);
 
         } else {
+            // Otherwise this is an existing inventory, so change app bar to say "Edit Product".
             setTitle(getString(R.string.detail_activity_title_edit_product));
 
             // Initialize a loader to read the inventory data from the database
@@ -113,70 +145,16 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             }
         } else {
 
-            Intent intent = new Intent(
-                    Intent.ACTION_PICK,
-                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-            startActivityForResult(intent, RESULT_LOAD_IMAGE);
+            // After permission is granted once, we can select image.
+            showGallery();
 
         }
 
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-
-                    Intent intent = new Intent(
-                            Intent.ACTION_PICK,
-                            android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
-                    startActivityForResult(intent, RESULT_LOAD_IMAGE);
-
-                } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                }
-                return;
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
-            Uri selectedImage = data.getData();
-            String[] filePathColumn = {MediaStore.Images.Media.DATA};
-
-            Cursor cursor = getContentResolver().query(selectedImage,
-                    filePathColumn, null, null, null);
-            cursor.moveToFirst();
-
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            String picturePath = cursor.getString(columnIndex);
-            cursor.close();
-
-            ImageView imageView = (ImageView) findViewById(R.id.imageview_picture);
-            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
-
-        }
     }
 
     public void onSave(View view) {
 
+        // User Input is validated
         if (TextUtils.isEmpty(mNameEditText.getText().toString().trim())) {
             Toast.makeText(DetailActivity.this, "Product name is empty", Toast.LENGTH_SHORT).show();
             return;
@@ -219,6 +197,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // Save inventory to database
         saveInventory();
+
         // Exit activity
         finish();
 
@@ -395,7 +374,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
      * Get user input from editor and save inventory into database
      */
     private void saveInventory() {
-
         // Read from input fields
         // Use trim to eliminate leading or trailing white space
         String nameString = mNameEditText.getText().toString().trim();
@@ -405,7 +383,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String supplierEmailString = mSupplierEmailEditText.getText().toString().trim();
 
         // Create a ContentValues object where column names are the key,
-        // and inventory attributes from the editor are the values
+        // and inventory attributes from the detail are the values
         ContentValues contentValues = new ContentValues();
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRODUCT, nameString);
 
@@ -479,6 +457,69 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         imageBitMap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         return stream.toByteArray();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, Do the
+                    // contacts-related task you need to do.
+
+                    showGallery();
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
+    }
+
+    /**
+     * Called when an activity to select image exits.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RESULT_LOAD_IMAGE && resultCode == RESULT_OK && null != data) {
+            // get Content Uri for the image from the gallery
+            Uri selectedImage = data.getData();
+            Log.d(LOG_TAG, "Uri image: " + selectedImage);
+
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+            Cursor cursor = getContentResolver().query(selectedImage,
+                    filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            String picturePath = cursor.getString(columnIndex);
+            cursor.close();
+            Log.d(LOG_TAG, "picturePath: " + picturePath);
+
+            ImageView imageView = (ImageView) findViewById(R.id.imageview_picture);
+            imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+
+        }
+    }
+
+    private void showGallery() {
+        Intent intent = new Intent(
+                Intent.ACTION_PICK,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+
+        startActivityForResult(intent, RESULT_LOAD_IMAGE);
     }
 
 }
