@@ -18,14 +18,19 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
-
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
-
+/**
+ * Displays list of inventories that were entered and stored in the app.
+ */
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+
+    // Identifier for the inventory data loader
     private static final int MAIN_LOADER = 0;
+
+    // Adapter for the ListView
     private InventoryCursorAdapter mCursorAdapter;
 
     @Override
@@ -35,52 +40,63 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         Log.d(LOG_TAG, "onCreate");
 
+        // Setup FAB to open DetailActivity
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Toast.makeText(MainActivity.this, "hello", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 startActivity(intent);
             }
         });
 
+        // Find the ListView which will be populated with the inventory data
         ListView listView = (ListView) findViewById(R.id.list);
+
+        // Find and set empty view on the ListView,
         View emptyView = findViewById(R.id.empty_view);
         listView.setEmptyView(emptyView);
 
-//        final ArrayList<Inventory> inventories = new ArrayList<>();
-//        for (int i = 0; i < 100; i++) {
-//            inventories.add(new Inventory("name" + i, i));
-//        }
-//        InventoryAdapter inventoryAdapter = new InventoryAdapter(this, inventories);
-//        listView.setAdapter(inventoryAdapter);
-
+        // Setup an Adapter to create a list item for each row of inventory data in the Cursor
+        // There is no inventory data yet(until the loader finishes) so pass in null for the Cursor.
         mCursorAdapter = new InventoryCursorAdapter(this, null);
         listView.setAdapter(mCursorAdapter);
 
+        // Setup the item click listener
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Log.d(LOG_TAG, "name: " + inventories.get(position).getName() +
-//                        ", position: " + position + ", id: " + id);
                 Log.d(LOG_TAG, "position: " + position + ", id: " + id);
 
-                // Create new intent to go to {@link DetailActivity}
+                // Create new intent to go to DetailActivity
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
 
+                // Form the content URI that represents the specific inventory that was clicked on,
+                // by appending the "id" (passed as input to this method) onto the
+                // InventoryEntry.CONTENT_URI.
+                // For example, the URI would be
+                // "content://com.example.android.inventory/inventories/2"
+                // if the inventory with ID 2 was clicked on.
                 Uri currentInventoryUri = ContentUris.withAppendedId(InventoryEntry.CONTENT_URI, id);
 
+                // Set the URI on the data field of the intent
                 intent.setData(currentInventoryUri);
 
                 // Launch the DetailActivity to display the data for the current inventory
                 startActivity(intent);
-
             }
         });
 
         // Kick off the loader
         getLoaderManager().initLoader(MAIN_LOADER, null, this);
+    }
+
+    /**
+     * Helper method to delete all inventories in the database.
+     */
+    private void deleteAllInventories() {
+        int rowsDeleted = getContentResolver().delete(InventoryEntry.CONTENT_URI, null, null);
+        Log.d(LOG_TAG, rowsDeleted + " rows deleted from inventory database");
     }
 
     @Override
@@ -94,77 +110,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
+        // User clicked on a menu option in the app bar overflow menu
         switch (item.getItemId()) {
+            // Response to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
                 deleteAllInventories();
-                break;
-            default:
                 break;
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public void reduceQuantity(int id) {
-        Log.d(LOG_TAG, "reduceQuantity: " + id);
-
-        Uri currentInventoryUri = ContentUris.withAppendedId(InventoryEntry.CONTENT_URI, id);
-
-        String[] projection = {
-                InventoryEntry._ID,
-                InventoryEntry.COLUMN_INVENTORY_PRODUCT,
-                InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY,
-                InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY,
-                InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY,
-                InventoryEntry.COLUMN_INVENTORY_PRICE
-        };
-
-        Log.d(LOG_TAG, "currentInventoryUri: " + currentInventoryUri);
-
-        Cursor data = getContentResolver().query(currentInventoryUri, projection, null, null, null);
-        if (data.moveToFirst()) {
-            // Find the column of inventory attributes that we're interested in
-            int nameColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRODUCT);
-            int totalQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_TOTAL_QUANTITY);
-            int currentQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY);
-            int saleQuantityColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY);
-            int priceColumnIndex = data.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
-
-            // Extract out the value from the Cursor for the given column index
-            String name = data.getString(nameColumnIndex);
-            int totalQuantity = data.getInt(totalQuantityColumnIndex);
-            int currentQuantity = data.getInt(currentQuantityColumnIndex);
-            int saleQuantity = data.getInt(saleQuantityColumnIndex);
-            String price = data.getString(priceColumnIndex);
-
-            Log.d(LOG_TAG, "name: " + name);
-            Log.d(LOG_TAG, "totalQuantity: " + totalQuantity);
-            Log.d(LOG_TAG, "currentQuantity: " + currentQuantity);
-            Log.d(LOG_TAG, "saleQuantity: " + saleQuantity);
-            Log.d(LOG_TAG, "price: " + price);
-
-            // Create a ContentValues object where column names are the key,
-            // and inventory attributes from the editor are the values
-            ContentValues contentValues = new ContentValues();
-
-            if (currentQuantity == 0) {
-                Toast.makeText(this, "No inventories", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            saleQuantity += 1;
-            contentValues.put(InventoryEntry.COLUMN_INVENTORY_SALE_QUANTITY, saleQuantity);
-            currentQuantity = totalQuantity - saleQuantity;
-            contentValues.put(InventoryEntry.COLUMN_INVENTORY_CURRENT_QUANTITY, currentQuantity);
-            int rowsAffected = getContentResolver().update(currentInventoryUri, contentValues, null, null);
-        }
-
-
-    }
-
-    private void deleteAllInventories() {
-        int rowsDeleted = getContentResolver().delete(InventoryEntry.CONTENT_URI, null, null);
-        Log.d(LOG_TAG, rowsDeleted + " rows deleted from inventory database");
     }
 
     @Override
@@ -181,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 InventoryEntry.COLUMN_INVENTORY_PRICE
         };
 
+        // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(
                 this,                           // Parent activity context
                 InventoryEntry.CONTENT_URI,     // Provider content URI to query
@@ -195,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         Log.d(LOG_TAG, "onLoadFinished");
 
-        // Update {@link InventoryCursorAdapter} with this new cursor containing updated pet data
+        // Update InventoryCursorAdapter with this new cursor containing updated inventory data
         mCursorAdapter.swapCursor(data);
     }
 
