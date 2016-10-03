@@ -20,7 +20,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,6 +74,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     // ImageView field to enter the inventory's Picture
     private ImageView mPictureImageView;
+    boolean isSelectProductPicture;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -93,9 +96,30 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mSupplierEmailEditText = (EditText) findViewById(R.id.edit_inventory_supplier_email);
         mPictureImageView = (ImageView) findViewById(R.id.imageview_picture);
 
+        mSaleQuantityEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d(LOG_TAG, "beforeTextChanged: " + charSequence.toString());
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                Log.d(LOG_TAG, "onTextChanged: " + charSequence.toString());
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                Log.d(LOG_TAG, "afterTextChanged");
+
+            }
+        });
+
         // If the intent DOES NOT contain a inventory content URI, then we know that we are
         // creating a new inventory
         if (mCurrentInventoryUri == null) {
+            isSelectProductPicture = false;
             // This is a new inventory, so change the app bar to say "Add a Product"
             setTitle(getString(R.string.detail_activity_title_new_product));
 
@@ -108,6 +132,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             deleteButton.setVisibility(View.INVISIBLE);
 
         } else {
+            isSelectProductPicture = true;
             // Otherwise this is an existing inventory, so change app bar to say "Edit Product".
             setTitle(getString(R.string.detail_activity_title_edit_product));
 
@@ -192,6 +217,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         if (Integer.parseInt(saleQuantity) > Integer.parseInt(totalQuantity)) {
             Toast.makeText(DetailActivity.this, "Sale quantity must be equal or less than total quantity", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isSelectProductPicture) {
+            Toast.makeText(DetailActivity.this, "Select a product picture", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -510,6 +540,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
             ImageView imageView = (ImageView) findViewById(R.id.imageview_picture);
             imageView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
+
+            isSelectProductPicture = true;
 
         }
     }

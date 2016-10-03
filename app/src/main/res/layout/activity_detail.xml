@@ -111,7 +111,7 @@
                     android:id="@+id/edit_inventory_sale_quantity"
                     style="@style/EditorFieldStyle"
                     android:hint="@string/hint_inventory_sale_quantity"
-                    android:inputType="textCapWords" />
+                    android:inputType="number" />
 
             </LinearLayout>
         </LinearLayout>
