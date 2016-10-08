@@ -75,6 +75,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     // ImageView field to enter the inventory's Picture
     private ImageView mPictureImageView;
     boolean isSelectProductPicture;
+    private int mBeforeSaleTextInt;
+    private int mNewSaleTextInt;
+    private boolean mIsWrongSaleQuantity = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -99,19 +102,42 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mSaleQuantityEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d(LOG_TAG, "beforeTextChanged: " + charSequence.toString());
+                String beforeTextString = charSequence.toString();
+
+                mBeforeSaleTextInt = Integer.parseInt(TextUtils.isEmpty(beforeTextString) ? "0" : beforeTextString);
+
+                Log.d(LOG_TAG, "beforeTextChanged: " + mBeforeSaleTextInt);
 
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                Log.d(LOG_TAG, "onTextChanged: " + charSequence.toString());
+                String newTextString = charSequence.toString();
+
+                mNewSaleTextInt = Integer.parseInt(TextUtils.isEmpty(newTextString) ? "0" : newTextString);
+
+                int total = Integer.parseInt(mTotalQuantityEditText.getText().toString());
+                if (mNewSaleTextInt > total) {
+                    mIsWrongSaleQuantity = true;
+                } else {
+                    mIsWrongSaleQuantity = false;
+
+                    int currentQuantity = total - mNewSaleTextInt;
+                    mCurrentQuantityTextView.setText(String.valueOf(currentQuantity));
+                }
+
+                Log.d(LOG_TAG, "onTextChanged: " + mNewSaleTextInt);
 
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
                 Log.d(LOG_TAG, "afterTextChanged");
+
+                if (mIsWrongSaleQuantity) {
+                    Toast.makeText(DetailActivity.this, "Sale quantity must be less or equal than total quantity", Toast.LENGTH_SHORT).show();
+                    mSaleQuantityEditText.setText(String.valueOf(mBeforeSaleTextInt));
+                }
 
             }
         });
